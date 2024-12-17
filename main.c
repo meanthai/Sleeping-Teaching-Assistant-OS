@@ -61,17 +61,18 @@ void *HoatDongTroGiang() {
         while (1) {
             pthread_mutex_lock(&KhoaGhe);
             if (SoGhe == 0) {
+                printf("~~~~~~~~~~ Tro giang di ngu. ~~~~~~~~~~\n");
                 pthread_mutex_unlock(&KhoaGhe);
                 break;
             }
-            sem_post(&Ghe[ChiSoHienTai]);
             SoGhe--;
             printf("Sinh vien roi ghe. So ghe con lai: %d\n", 3 - SoGhe);
+            sem_post(&Ghe[ChiSoHienTai]);
             ChiSoHienTai = (ChiSoHienTai + 1) % 3;
             pthread_mutex_unlock(&KhoaGhe);
 
             printf("\t Tro giang dang giup sinh vien.\n");
-            sleep(5);
+            sleep(2);
             sem_post(&SemSinhVien);
             usleep(1000);
         }
@@ -83,25 +84,22 @@ void *HoatDongSinhVien(void *id) {
 
     while (1) {
         printf("Sinh vien %ld dang lap trinh.\n", (long)id);
-        ThoiGianLapTrinh = rand() % 10 + 1;
+        ThoiGianLapTrinh = rand() % 20 + 1;
         sleep(ThoiGianLapTrinh);
 
         printf("Sinh vien %ld can giup do tu tro giang.\n", (long)id);
 
         pthread_mutex_lock(&KhoaGhe);
         int soLuong = SoGhe;
-        pthread_mutex_unlock(&KhoaGhe);
 
         if (soLuong < 3) {
             if (soLuong == 0)
                 sem_post(&NgungNgu);
-            else
-                printf("Sinh vien %ld ngoi ghe doi tro giang.\n", (long)id);
+            printf("Sinh vien %ld ngoi ghe doi tro giang.", (long)id);
 
-            pthread_mutex_lock(&KhoaGhe);
             int chiSo = (ChiSoHienTai + SoGhe) % 3;
             SoGhe++;
-            printf("Sinh vien da ngoi ghe. So ghe con lai: %d\n", 3 - SoGhe);
+            printf(" So ghe con lai: %d\n", 3 - SoGhe);
             pthread_mutex_unlock(&KhoaGhe);
 
             sem_wait(&Ghe[chiSo]);
@@ -109,6 +107,7 @@ void *HoatDongSinhVien(void *id) {
             sem_wait(&SemSinhVien);
             printf("Sinh vien %ld roi phong tro giang.\n", (long)id);
         } else {
+            pthread_mutex_unlock(&KhoaGhe);
             printf("Sinh vien %ld se quay lai sau.\n", (long)id);
         }
     }
